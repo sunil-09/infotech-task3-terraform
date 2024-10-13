@@ -68,14 +68,12 @@ module "key_pair" {
   create_private_key = true
 }
 
-
 resource "aws_ssm_parameter" "ssm_jumpbox_keypair" {
   name        = "/test"
   description = "Stores the private key of ec2 key pair"
   type        = "SecureString"
   value       = module.key_pair.private_key_pem
 }
-
 
 # Launch an EC2 instance
 resource "aws_instance" "web" {
@@ -86,15 +84,7 @@ resource "aws_instance" "web" {
   # security_groups = [aws_security_group.allow_http.name]
   vpc_security_group_ids      = [aws_security_group.allow_http.id]
   associate_public_ip_address = true
-
-  # Install Nginx on launch
-  user_data = <<-EOF
-              #!/bin/bash
-              yum update -y
-              yum install -y nginx
-              systemctl start nginx
-              systemctl enable nginx
-              EOF
+  user_data                   = file("nginx_user_data.sh")
 
   tags = {
     Name = "NginxServer"
